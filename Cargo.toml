@@ -1,0 +1,13 @@
+[package]
+name = "herdr-auto-layout"
+version = "0.1.0"
+edition = "2021"
+description = "Declarative layouts applied to every new workspace — cross-platform herdr plugin"
+license = "MIT"
+repository = "https://github.com/user/herdr-auto-layout"
+keywords = ["herdr", "terminal", "layout", "plugin"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1"
