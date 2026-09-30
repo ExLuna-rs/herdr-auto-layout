@@ -60,36 +60,48 @@ fn cmd_on_event() -> Result<(), String> {
     let event: serde_json::Value = serde_json::from_str(&event_json)
         .map_err(|e| format!("failed to parse event JSON: {}", e))?;
 
+    // The event JSON structure is: { "event": "workspace_created", "data": { "workspace": { ... } } }
     let workspace_id = event
-        .pointer("/workspace/workspace_id")
+        .pointer("/data/workspace/workspace_id")
+        .or_else(|| event.pointer("/workspace/workspace_id"))
         .or_else(|| event.pointer("/workspace_id"))
         .and_then(|v| v.as_str())
         .ok_or("event JSON missing workspace_id")?
         .to_string();
 
-    let workspace_cwd = event
-        .pointer("/workspace/cwd")
-        .or_else(|| event.pointer("/workspace_cwd"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+    let workspace_cwd = std::env::var("HERDR_ACTIVE_PANE_CWD")
+        .or_else(|_| {
+            event
+                .pointer("/data/workspace/cwd")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .ok_or(std::env::VarError::NotPresent)
+        })
+        .unwrap_or_default();
 
     let tab_id = event
-        .pointer("/tab/tab_id")
-        .or_else(|| event.pointer("/tab_id"))
+        .pointer("/data/workspace/active_tab_id")
+        .or_else(|| event.pointer("/tab/tab_id"))
         .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+        .map(|s| s.to_string())
+        .or_else(|| std::env::var("HERDR_TAB_ID").ok())
+        .unwrap_or_default();
 
-    let pane_id = event
-        .pointer("/root_pane/pane_id")
-        .or_else(|| event.pointer("/pane_id"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+    // For a fresh workspace the pane_id isn't in the event, so we use env vars
+    // or query herdr for the first pane in the tab.
+    let pane_id = std::env::var("HERDR_PANE_ID")
+        .or_else(|_| std::env::var("HERDR_ACTIVE_PANE_ID"))
+        .or_else(|_| {
+            // Derive from tab_id: query herdr for panes in this tab
+            herdr::get_first_pane_of_tab(&tab_id)
+        })
+        .unwrap_or_default();
 
     if pane_id.is_empty() || tab_id.is_empty() {
-        return Err("event JSON missing tab_id or pane_id — cannot apply layout".to_string());
+        return Err(format!(
+            "cannot determine tab_id ({}) or pane_id ({}) — skipping layout",
+            tab_id, pane_id
+        ));
     }
 
     let config = load_config()?;

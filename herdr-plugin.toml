@@ -7,11 +7,6 @@ platforms = ["linux", "macos", "windows"]
 
 [[build]]
 command = ["cargo", "build", "--release"]
-platforms = ["linux", "macos"]
-
-[[build]]
-command = ["cargo", "build", "--release"]
-platforms = ["windows"]
 
 [[startup]]
 command = ["target/release/herdr-auto-layout", "startup"]
@@ -39,7 +34,7 @@ command = ["target/release/herdr-auto-layout", "apply"]
 platforms = ["linux", "macos"]
 
 [[actions]]
-id = "apply"
+id = "apply-windows"
 title = "Apply layout to current workspace"
 contexts = ["workspace"]
 command = ["target/release/herdr-auto-layout.exe", "apply"]
@@ -52,7 +47,7 @@ command = ["target/release/herdr-auto-layout", "validate"]
 platforms = ["linux", "macos"]
 
 [[actions]]
-id = "validate"
+id = "validate-windows"
 title = "Validate layout config"
 command = ["target/release/herdr-auto-layout.exe", "validate"]
 platforms = ["windows"]

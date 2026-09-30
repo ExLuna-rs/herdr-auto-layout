@@ -81,13 +81,8 @@ fn build_panes(root_pane_id: &str, panes: &[Pane]) -> Result<(), String> {
     Ok(())
 }
 
-/// Configure a single pane: rename, start agent or run command.
+/// Configure a single pane: start agent or run command.
 fn configure_pane(pane_id: &str, pane: &Pane) -> Result<(), String> {
-    // Rename the pane if a title is set.
-    if let Some(ref title) = pane.title {
-        let _ = herdr::pane_rename(pane_id, title);
-    }
-
     if let Some(ref agent_kind) = pane.agent {
         // Start an agent.
         let agent_name = pane
@@ -101,7 +96,7 @@ fn configure_pane(pane_id: &str, pane: &Pane) -> Result<(), String> {
 
         if let Err(e) = herdr::agent_start(agent_name, agent_kind, pane_id, args) {
             eprintln!(
-                "[auto-layout] warning: failed to start agent \"{}\" ({}): {}",
+                "[auto-layout] warning: agent \"{}\" ({}): {}",
                 agent_name, agent_kind, e
             );
         }
@@ -110,7 +105,7 @@ fn configure_pane(pane_id: &str, pane: &Pane) -> Result<(), String> {
         if let Some(ref prompt_text) = pane.prompt {
             if let Err(e) = herdr::agent_prompt(agent_name, prompt_text) {
                 eprintln!(
-                    "[auto-layout] warning: failed to send prompt to \"{}\": {}",
+                    "[auto-layout] warning: prompt to \"{}\": {}",
                     agent_name, e
                 );
             }
@@ -118,9 +113,9 @@ fn configure_pane(pane_id: &str, pane: &Pane) -> Result<(), String> {
     } else if let Some(ref cmd) = pane.command {
         // Run a shell command.
         if !cmd.is_empty() {
-            if let Err(e) = herdr::pane_send_keys(pane_id, cmd) {
+            if let Err(e) = herdr::pane_run_command(pane_id, cmd) {
                 eprintln!(
-                    "[auto-layout] warning: failed to send command to pane: {}",
+                    "[auto-layout] warning: command in pane: {}",
                     e
                 );
             }

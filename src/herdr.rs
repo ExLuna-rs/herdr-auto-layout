@@ -79,9 +79,9 @@ pub fn tab_create(workspace_id: &str, label: &str) -> Result<TabCreateResult, St
     ])?;
 
     let pane_id = json
-        .pointer("/result/pane/pane_id")
+        .pointer("/result/root_pane/pane_id")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| "tab create: missing result.pane.pane_id in response".to_string())?
+        .ok_or_else(|| "tab create: missing result.root_pane.pane_id in response".to_string())?
         .to_string();
 
     Ok(TabCreateResult { pane_id })
@@ -132,9 +132,9 @@ pub fn pane_split(
     })
 }
 
-/// Send keystrokes to a pane.
-pub fn pane_send_keys(pane_id: &str, text: &str) -> Result<(), String> {
-    run_quiet(&["pane", "send-keys", pane_id, text, "--press", "enter"])
+/// Run a command in a pane (sends text + Enter).
+pub fn pane_run_command(pane_id: &str, command: &str) -> Result<(), String> {
+    run_quiet(&["pane", "run", pane_id, command])
 }
 
 /// Rename a pane.
@@ -171,4 +171,15 @@ pub fn agent_start(
 /// Submit a prompt to a running agent.
 pub fn agent_prompt(name: &str, text: &str) -> Result<(), String> {
     run_quiet(&["agent", "prompt", name, text])
+}
+
+/// Get the first pane_id of a given tab by listing panes.
+pub fn get_first_pane_of_tab(tab_id: &str) -> Result<String, String> {
+    let json = run(&["pane", "list", "--tab", tab_id])?;
+
+    json.pointer("/result/panes/0/pane_id")
+        .or_else(|| json.pointer("/result/0/pane_id"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .ok_or_else(|| format!("no panes found for tab {}", tab_id))
 }
