@@ -51,3 +51,17 @@ id = "validate-windows"
 title = "Validate layout config"
 command = ["target/release/herdr-auto-layout.exe", "validate"]
 platforms = ["windows"]
+
+[[actions]]
+id = "save"
+title = "Save current workspace as layout template"
+contexts = ["workspace"]
+command = ["target/release/herdr-auto-layout", "save"]
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "save-windows"
+title = "Save current workspace as layout template"
+contexts = ["workspace"]
+command = ["target/release/herdr-auto-layout.exe", "save"]
+platforms = ["windows"]

@@ -193,3 +193,27 @@ pub fn tab_count(workspace_id: &str) -> Result<usize, String> {
         .map(|a| a.len())
         .ok_or_else(|| "failed to count tabs".to_string())
 }
+
+// ---------------------------------------------------------------------------
+// Query operations (for save)
+// ---------------------------------------------------------------------------
+
+/// List all tabs in a workspace. Returns the raw JSON value.
+pub fn tab_list(workspace_id: &str) -> Result<Value, String> {
+    run(&["tab", "list", "--workspace", workspace_id])
+}
+
+/// List all panes in a workspace. Returns the raw JSON value.
+pub fn pane_list(workspace_id: &str) -> Result<Value, String> {
+    run(&["pane", "list", "--workspace", workspace_id])
+}
+
+/// Get pane layout info for a given pane (returns the tab's full layout).
+pub fn pane_layout(pane_id: &str) -> Result<Value, String> {
+    run(&["pane", "layout", "--pane", pane_id])
+}
+
+/// Get process info for a pane.
+pub fn pane_process_info(pane_id: &str) -> Result<Value, String> {
+    run(&["pane", "process-info", "--pane", pane_id])
+}

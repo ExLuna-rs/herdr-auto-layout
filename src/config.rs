@@ -3,11 +3,11 @@
 //! Parses a YAML config file that declares layouts (tabs + panes) and optional
 //! workspace-to-layout mappings.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 /// Root configuration.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     /// Fallback layout id applied when no workspace-specific match is found.
@@ -23,7 +23,7 @@ pub struct Config {
 }
 
 /// A named layout containing one or more tabs.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Layout {
     /// Unique identifier referenced by `globalLayout` or workspace mappings.
     pub id: String,
@@ -34,7 +34,7 @@ pub struct Layout {
 }
 
 /// A single tab inside a layout.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Tab {
     /// Label shown on the tab bar.
     pub title: String,
@@ -45,7 +45,7 @@ pub struct Tab {
 }
 
 /// A pane inside a tab.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Pane {
     /// Display label for the pane.
@@ -77,7 +77,7 @@ pub struct Pane {
 }
 
 /// Maps a workspace (by path or repo name) to a layout.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkspaceMatch {
     /// Prefix-match against the workspace working directory.
@@ -88,6 +88,23 @@ pub struct WorkspaceMatch {
 
     /// Layout id to apply when this workspace matches.
     pub default_layout: Option<String>,
+}
+
+impl Pane {
+    /// Create an empty pane (just a shell prompt).
+    pub fn empty() -> Self {
+        Pane {
+            title: Some("terminal".to_string()),
+            command: None,
+            agent: None,
+            agent_name: None,
+            agent_args: None,
+            prompt: None,
+            split: None,
+            size: None,
+            persist: None,
+        }
+    }
 }
 
 impl Config {

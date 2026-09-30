@@ -14,6 +14,7 @@
 mod config;
 mod herdr;
 mod layout;
+mod save;
 
 use config::Config;
 use std::path::PathBuf;
@@ -26,9 +27,10 @@ fn main() {
         "startup" => cmd_startup(),
         "on-event" => cmd_on_event(),
         "apply" => cmd_apply(),
+        "save" => cmd_save(),
         "validate" => cmd_validate(),
         _ => {
-            eprintln!("usage: herdr-auto-layout <startup|on-event|apply|validate>");
+            eprintln!("usage: herdr-auto-layout <startup|on-event|apply|save|validate>");
             std::process::exit(1);
         }
     };
@@ -173,6 +175,27 @@ fn cmd_validate() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+/// Save the current workspace layout as a named template.
+///
+/// Captures tabs, panes, splits, agents, and commands, then appends the
+/// resulting layout to config.yaml.
+fn cmd_save() -> Result<(), String> {
+    let workspace_id = get_context_field("workspace_id", "/workspace_id")
+        .or_else(|_| std::env::var("HERDR_WORKSPACE_ID"))
+        .map_err(|_| "could not determine workspace id from context".to_string())?;
+
+    // Use a timestamp-based name; users can rename in config.yaml later.
+    let name = format!(
+        "saved-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0)
+    );
+
+    save::save_workspace(&workspace_id, &name)
 }
 
 // ---------------------------------------------------------------------------
