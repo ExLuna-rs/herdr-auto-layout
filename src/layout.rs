@@ -55,7 +55,7 @@ pub fn apply(
         }
 
         // Build panes inside this tab.
-        build_panes(&root_pane_id, &tab.panes)?;
+        build_panes(&root_pane_id, &tab.panes, workspace_id)?;
     }
 
     Ok(())
@@ -65,13 +65,13 @@ pub fn apply(
 ///
 /// The first pane reuses `root_pane_id` (already exists).  Subsequent panes
 /// are created by splitting from the previous pane.
-fn build_panes(root_pane_id: &str, panes: &[Pane]) -> Result<(), String> {
+fn build_panes(root_pane_id: &str, panes: &[Pane], workspace_id: &str) -> Result<(), String> {
     let mut current_pane_id = root_pane_id.to_string();
 
     for (pane_idx, pane) in panes.iter().enumerate() {
         if pane_idx == 0 {
             // First pane already exists — just configure it.
-            configure_pane(&current_pane_id, pane)?;
+            configure_pane(&current_pane_id, pane, workspace_id)?;
         } else {
             // Split from the previous pane.
             let direction = resolve_direction(pane.split.as_deref());
@@ -86,7 +86,7 @@ fn build_panes(root_pane_id: &str, panes: &[Pane]) -> Result<(), String> {
             })?;
 
             current_pane_id = result.pane_id.clone();
-            configure_pane(&result.pane_id, pane)?;
+            configure_pane(&result.pane_id, pane, workspace_id)?;
         }
     }
 
@@ -94,19 +94,22 @@ fn build_panes(root_pane_id: &str, panes: &[Pane]) -> Result<(), String> {
 }
 
 /// Configure a single pane: start agent or run command.
-fn configure_pane(pane_id: &str, pane: &Pane) -> Result<(), String> {
+fn configure_pane(pane_id: &str, pane: &Pane, workspace_id: &str) -> Result<(), String> {
     if let Some(ref agent_kind) = pane.agent {
-        // Start an agent.
-        let agent_name = pane
+        // Start an agent with a unique name per workspace to avoid conflicts.
+        let base_name = pane
             .agent_name
             .as_deref()
             .or(pane.title.as_deref())
             .unwrap_or(agent_kind);
 
+        // Append workspace id suffix to make the name unique across workspaces
+        let agent_name = format!("{}-{}", base_name, workspace_id);
+
         let empty_args = Vec::new();
         let args = pane.agent_args.as_ref().unwrap_or(&empty_args);
 
-        if let Err(e) = herdr::agent_start(agent_name, agent_kind, pane_id, args) {
+        if let Err(e) = herdr::agent_start(&agent_name, agent_kind, pane_id, args) {
             eprintln!(
                 "[auto-layout] warning: agent \"{}\" ({}): {}",
                 agent_name, agent_kind, e
@@ -115,7 +118,7 @@ fn configure_pane(pane_id: &str, pane: &Pane) -> Result<(), String> {
 
         // Optionally submit a prompt after agent start.
         if let Some(ref prompt_text) = pane.prompt {
-            if let Err(e) = herdr::agent_prompt(agent_name, prompt_text) {
+            if let Err(e) = herdr::agent_prompt(&agent_name, prompt_text) {
                 eprintln!(
                     "[auto-layout] warning: prompt to \"{}\": {}",
                     agent_name, e
