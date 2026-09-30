@@ -89,7 +89,7 @@ pub fn tab_create(workspace_id: &str, label: &str) -> Result<TabCreateResult, St
 
 /// Rename an existing tab.
 pub fn tab_rename(tab_id: &str, label: &str) -> Result<(), String> {
-    run_quiet(&["tab", "rename", tab_id, "--label", label])
+    run_quiet(&["tab", "rename", tab_id, label])
 }
 
 // ---------------------------------------------------------------------------
@@ -182,4 +182,14 @@ pub fn get_first_pane_of_tab(tab_id: &str) -> Result<String, String> {
         .and_then(|v| v.as_str())
         .map(|s| s.to_string())
         .ok_or_else(|| format!("no panes found for tab {}", tab_id))
+}
+
+/// Count the number of tabs in a workspace.
+pub fn tab_count(workspace_id: &str) -> Result<usize, String> {
+    let json = run(&["tab", "list", "--workspace", workspace_id])?;
+
+    json.pointer("/result/tabs")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .ok_or_else(|| "failed to count tabs".to_string())
 }

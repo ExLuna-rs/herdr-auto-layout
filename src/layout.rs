@@ -17,6 +17,18 @@ pub fn apply(
     first_pane_id: &str,
     layout: &Layout,
 ) -> Result<(), String> {
+    // Check if layout was already applied (workspace has more than 1 tab).
+    match herdr::tab_count(workspace_id) {
+        Ok(count) if count > 1 => {
+            eprintln!(
+                "[auto-layout] workspace {} already has {} tabs — skipping to avoid duplicates",
+                workspace_id, count
+            );
+            return Ok(());
+        }
+        _ => {}
+    }
+
     eprintln!(
         "[auto-layout] applying layout \"{}\" ({} tab(s)) to workspace {}",
         layout.id,
