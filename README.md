@@ -20,16 +20,16 @@ worktree, a manual `prefix+shift+n`, or the CLI.
 ### From source (requires Rust)
 
 ```bash
-git clone https://github.com/user/herdr-auto-layout.git
+git clone https://github.com/ExLuna-rs/herdr-auto-layout.git
 herdr plugin link ./herdr-auto-layout
 ```
 
 The plugin builds itself on first use via `cargo build --release`.
 
-### From GitHub (once published)
+### From GitHub
 
 ```bash
-herdr plugin install user/herdr-auto-layout
+herdr plugin install ExLuna-rs/herdr-auto-layout
 ```
 
 ## Configuration
@@ -172,6 +172,20 @@ no duplicates.
 
 - herdr ≥ 0.8.0
 - Rust toolchain (for building from source)
+
+## Roadmap
+
+### 🖥️ Adaptive display scaling
+Automatically adjust font size and pane proportions based on screen size. On smaller screens (14" laptops), herdr can feel cramped — the plugin will detect terminal dimensions and apply optimized ratios/font settings per layout.
+
+### 💾 Save current workspace as template
+Capture a manually configured workspace (tabs, panes, splits, commands) and save it as a reusable layout template. Then apply it automatically to new workspaces.
+
+```bash
+# Planned usage:
+herdr plugin action invoke save --plugin auto-layout
+# → Saves current workspace layout as a new template in config.yaml
+```
 
 ## License
 
